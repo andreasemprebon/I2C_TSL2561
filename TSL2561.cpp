@@ -10,7 +10,7 @@
 /**
  * DEBUG
  */
-Serial pc_debug(SERIAL_TX, SERIAL_RX);
+//Serial pc_debug(SERIAL_TX, SERIAL_RX);
 
 /**
  * I2C connection
@@ -18,7 +18,6 @@ Serial pc_debug(SERIAL_TX, SERIAL_RX);
 I2C *i2c;
 
 TSL2561::TSL2561() {
-    // TODO Auto-generated constructor stub
 }
 
 bool TSL2561::init() {
@@ -47,7 +46,7 @@ bool TSL2561::powerUp() {
 }
 
 /**
- *
+ * Get sensor ID
  */
 bool TSL2561::getID(char ID[]) {
     bool status = readByte(TSL2561_REG_ID, ID, 1);
@@ -55,19 +54,25 @@ bool TSL2561::getID(char ID[]) {
 }
 
 /**
- *
+ * Power off the sensor
  */
 bool TSL2561::powerOff() {
     return ( writeCommand(TSL2561_REG_CONTROL, TSL2561_CMD_SHUTDOWN) );
 }
 
-bool TSL2561::getTiming(char timing[]) {
-	return ( readByte(TSL2561_REG_TIMING, timing, 1) );
+/**
+ * Timing and Gain
+ */
+bool TSL2561::getTimingAndGain(char timing_gain[]) {
+	return ( readByte(TSL2561_REG_TIMING, timing_gain, 1) );
 }
 
-bool TSL2561::setTiming(Timing time) {
+bool TSL2561::setTimingAndGain(Timing time, Gain gain) {
 	char new_timing;
+	char new_gain;
+	char new_time_and_gain;
 
+	// Select the new timing
 	switch (time) {
 		case TSL2561_INT_TIMING_13_MS:
 			new_timing = TSL2561_CMD_TIMING_0;
@@ -82,7 +87,23 @@ bool TSL2561::setTiming(Timing time) {
 			return false;
 	}
 
-	return ( writeCommand(TSL2561_REG_TIMING, new_timing) );
+	// Select the new gain
+	switch (gain) {
+		case TSL2561_GAIN_LOW:
+			new_gain = TSL2561_CMD_LOW_GAIN;
+			break;
+		case TSL2561_GAIN_HIGH:
+			new_gain = TSL2561_CMD_HIGH_GAIN;
+			break;
+		default:
+			return false;
+	}
+
+	//Gain is set with the last of the first 4 byte
+	//Timing is in the last 2 bytes.
+	new_time_and_gain = (new_gain & 0xF0) | (new_timing & 0x0F);
+
+	return ( writeCommand(TSL2561_REG_TIMING, new_time_and_gain) );
 }
 
 bool TSL2561::readData0(char data0[]) {
@@ -101,7 +122,10 @@ bool TSL2561::readByte(unsigned char address, char data_read[], int length) {
     prepare_to_read[0] = (address & 0x0F) | TSL2561_REG_CMD;
     int status = i2c->write(_i2c_addr, prepare_to_read, 1, true);
 
+    if ( status != 0 ) {
 //    pc_debug.printf("Scrittura prima di lettura: %i\n", status);
+    	return false;
+    }
 
     int read_status = i2c->read(_i2c_addr, data_read, length, false);
 
@@ -135,13 +159,5 @@ bool TSL2561::writeCommand(unsigned char address, unsigned char value) {
     return (status == 0);
 }
 
-/**
- * Private method
- */
-bool TSL2561::isSensorReady() {
-    return (i2c != NULL);
-}
-
 TSL2561::~TSL2561() {
-    // TODO Auto-generated destructor stub
 }

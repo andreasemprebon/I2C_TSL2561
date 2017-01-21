@@ -19,37 +19,79 @@ class TSL2561 {
 			TSL2561_INT_TIMING_101_MS,
 			TSL2561_INT_TIMING_402_MS
 		};
+
+		enum Gain {
+			TSL2561_GAIN_LOW,
+			TSL2561_GAIN_HIGH
+		};
+
         TSL2561();
         virtual ~TSL2561();
 
         /*
-         * Initilization
+         * Initialization
+         * @return true if OK, false otherwise
          */
         bool init();
         bool init_with_address(char _addr);
 
         /**
          * Turn on the sensor
+         * @return true if OK, false otherwise
          */
         bool powerUp();
+
+        /**
+         * Turn off the sensor
+         * @return true if OK, false otherwise
+         */
         bool powerOff();
 
+        /**
+         * Save into the var ID the sensor ID
+         * @parmas char ID[]: pointer to 1 byte array of char
+         * @return true if OK, false otherwise
+         */
         bool getID(char ID[]);
-        bool getTiming(char timing[]);
 
-        bool setTiming(Timing time);
+        /**
+         * Save into timing the current timing and gain
+         * configuration of the sensor
+         * @params char timing_gain[]: pointer to 1 byte array of char
+         * @return true if OK, false otherwise
+         */
+        bool getTimingAndGain(char timing_gain[]);
 
+        /**
+         * Set the integration timing (only timing, NOT gain)
+         * @params Timing time: elem of Timing struct
+         * @return true if OK, false otherwise
+         */
+        bool setTimingAndGain(Timing time, Gain gain);
+
+        /**
+         * Read data from register DATA0 (visible light) and DATA1 (IR light).
+         * @params  char data0[]:	2 byte char array for visible light, first byte
+         * 							is the LOW value, second byte is the HIGH value
+         * 			char data1[]: 	2 byte char array for IR light, first byte is
+         * 							the LOW value, second byte is the HIGH value
+         * @return true if OK, false otherwise
+         */
         bool readData0(char data0[]);
         bool readData1(char data1[]);
 
         /*
          * Write I2C
+         * In general this function should NOT be used, unless you are sure
+         * of what you are doing
          */
         bool writeCommand(unsigned char address, unsigned char value);
 
 
         /**
          * Read I2C
+         * In general this function should NOT be used, unless you are sure
+         * of what you are doing
          */
         bool readByte(unsigned char address, char data_read[], int length);
 
@@ -59,8 +101,6 @@ class TSL2561 {
 
         // I2C sensor main address
         unsigned int _i2c_addr;
-    private:
-        bool isSensorReady();
 };
 
 /**
@@ -94,6 +134,8 @@ class TSL2561 {
 #define TSL2561_CMD_TIMING_0    0x00
 #define TSL2561_CMD_TIMING_1    0x01
 #define TSL2561_CMD_TIMING_2    0x10
+#define TSL2561_CMD_HIGH_GAIN	0x10
+#define TSL2561_CMD_LOW_GAIN	0x00
 
 #else
 #error "This class must be used with DISCO_L476VG board only."
