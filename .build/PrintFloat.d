@@ -1,6 +1,6 @@
-main.o: ../main.cpp .././mbed_config.h ../mbed/./mbed.h \
- ../mbed/./platform/toolchain.h ../mbed/./platform/mbed_preprocessor.h \
- ../mbed/./platform/platform.h \
+PrintFloat.o: ../PrintFloat.cpp .././mbed_config.h ../PrintFloat.h \
+ ../mbed/./mbed.h ../mbed/./platform/toolchain.h \
+ ../mbed/./platform/mbed_preprocessor.h ../mbed/./platform/platform.h \
  ../mbed/TARGET_DISCO_L476VG/TARGET_STM/TARGET_STM32L4/device.h \
  ../mbed/TARGET_DISCO_L476VG/TARGET_STM/TARGET_STM32L4/TARGET_DISCO_L476VG/objects.h \
  ../mbed/TARGET_DISCO_L476VG/TARGET_STM/TARGET_STM32L4/TARGET_DISCO_L476VG/device/cmsis.h \
@@ -124,9 +124,11 @@ main.o: ../main.cpp .././mbed_config.h ../mbed/./mbed.h \
  ../mbed/./drivers/InterruptIn.h ../mbed/./hal/gpio_irq_api.h \
  ../mbed/./platform/wait_api.h ../mbed/./hal/sleep_api.h \
  ../mbed/./platform/rtc_time.h ../mbed/./platform/Callback.h \
- ../mbed/./platform/FunctionPointer.h ../TSL2561.h ../PrintFloat.h
+ ../mbed/./platform/FunctionPointer.h
 
 .././mbed_config.h:
+
+../PrintFloat.h:
 
 ../mbed/./mbed.h:
 
@@ -459,7 +461,3 @@ main.o: ../main.cpp .././mbed_config.h ../mbed/./mbed.h \
 ../mbed/./platform/Callback.h:
 
 ../mbed/./platform/FunctionPointer.h:
-
-../TSL2561.h:
-
-../PrintFloat.h:

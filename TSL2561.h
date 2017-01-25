@@ -80,6 +80,8 @@ class TSL2561 {
         bool readData0(char data0[]);
         bool readData1(char data1[]);
 
+        bool getLux(char data0[], char data1[], Gain gain, Timing timing, double &lux);
+
         /*
          * Write I2C
          * In general this function should NOT be used, unless you are sure

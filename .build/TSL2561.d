@@ -124,7 +124,7 @@ TSL2561.o: ../TSL2561.cpp .././mbed_config.h ../TSL2561.h \
  ../mbed/./drivers/InterruptIn.h ../mbed/./hal/gpio_irq_api.h \
  ../mbed/./platform/wait_api.h ../mbed/./hal/sleep_api.h \
  ../mbed/./platform/rtc_time.h ../mbed/./platform/Callback.h \
- ../mbed/./platform/FunctionPointer.h
+ ../mbed/./platform/FunctionPointer.h ../PrintFloat.h
 
 .././mbed_config.h:
 
@@ -461,3 +461,5 @@ TSL2561.o: ../TSL2561.cpp .././mbed_config.h ../TSL2561.h \
 ../mbed/./platform/Callback.h:
 
 ../mbed/./platform/FunctionPointer.h:
+
+../PrintFloat.h:

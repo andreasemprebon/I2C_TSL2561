@@ -6,12 +6,19 @@
 #include "TSL2561.h"
 
 /**
+ * Supporto
+ */
+#include "PrintFloat.h" //Mbed non supporta le printf con i float perchè il codice diventa troppo pesante :(
+
+/**
  * Light Sensor TSL2561
  * Varibales
  */
 TSL2561 *light_sensor;
+double lux;
 char data0[2];
 char data1[2];
+char luxPrintBuf[10];
 bool flag_read_light_sensor = false;
 int interrupt_count_light_sensor = 0;
 
@@ -115,7 +122,10 @@ void interrupt() {
  */
 void loop() {
 	int count_errori = 0;
+	int count_saturazione = 0;
 	pc.printf("Ciclo di vita avviato!\n");
+	pc.printf("Schema dati:\n");
+	pc.printf("Secondi trascorsi | data0[1] | data0[0] | data1[1] | data1[0] | lux | count_errori | count_saturazione\n");
 
 	while (1) {
 		// Lettura sensore di luminosta'
@@ -138,9 +148,21 @@ void loop() {
 				count_errori++;
 			}
 
-			pc.printf("[%i] DATA0: 0x%x%x\n", secondi_trascorsi, data0[1], data0[0]);
-			pc.printf("[%i] DATA1: 0x%x%x\n", secondi_trascorsi, data1[1], data1[0]);
-			pc.printf("[%i] Error count: %i\n", secondi_trascorsi, count_errori);
+			if ( ! light_sensor->getLux(data0, data1,
+											TSL2561::TSL2561_GAIN_HIGH,
+											TSL2561::TSL2561_INT_TIMING_402_MS, lux) ) {
+				pc.printf("[%i] Saturazione!\n", secondi_trascorsi);
+				count_saturazione++;
+			}
+
+			PrintFloat::ftos(luxPrintBuf, lux);
+
+			pc.printf(",%i,0x%x 0x%x,0x%x 0x%x,%s,%i,%i\n", secondi_trascorsi,
+													data0[1], data0[0],
+													data1[1], data1[0],
+													luxPrintBuf,
+													count_errori,
+													count_saturazione);
 		}
 
 		if ( flag_flash_led ) {
@@ -150,7 +172,7 @@ void loop() {
 			led_green = !led_green;
 		}
 
-		wait(0.001);
+		wait(0.0001);
 	}
 }
 

@@ -6,6 +6,7 @@
  */
 
 #include "TSL2561.h"
+#include "PrintFloat.h"
 
 /**
  * DEBUG
@@ -16,6 +17,14 @@
  * I2C connection
  */
 I2C *i2c;
+
+/**
+ * Variables for getLux()
+ */
+float ratio  = 0.0f;
+float d0	 = 0.0f;
+float d1	 = 0.0f;
+float ms	 = 0.0f;
 
 TSL2561::TSL2561() {
 }
@@ -114,6 +123,97 @@ bool TSL2561::readData0(char data0[]) {
 bool TSL2561::readData1(char data1[]) {
 	bool status = readByte(TSL2561_REG_DATA_1_LOW, data1, 2);
 	return status;
+}
+
+
+bool TSL2561::getLux(char data0[], char data1[], Gain gain, Timing timing, double &lux) {
+	ratio = 0.0f;
+	d0	  = 0.0f;
+	d1	  = 0.0f;
+	ms	  = 0.0f;
+
+	/**
+	 * Converto i byte contenuti nel CH0 in un intero:
+	 * 8 bit di data0[1] concatenati agli 8 bit di data0[0]
+	 * 	|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x| -> lo converto in intero.
+	 * 	Esempio: 	data0[1]: 0x34 -> 0x3400 -> int: 13312
+	 * 				data0[0]: 0x12 -> 0x0012 -> int: 18
+	 * 									SOMMO: --------------
+	 * 										int: 13312 + 18 = 13320 -> d0
+	 */
+	d0 = (int)(data0[1] << 8) * 1.0;
+	d0 = (d0 + (int)data0[0]) * 1.0;
+
+	d1 = (int)(data1[1] << 8) * 1.0;
+	d1 = (d1 + (int)data1[0]) * 1.0;
+
+//	PrintFloat::printFloat(&pc_debug, "d0:", d0);
+//	PrintFloat::printFloat(&pc_debug, "d1:", d1);
+
+	/**
+	 * ERRORE SATURAZIONE
+	 */
+	if ( (d0 == 0xFFFF) || (d1 == 0xFFFF) ) {
+		lux = 0.0;
+		return false;
+	}
+
+	// We will need the ratio for subsequent calculations
+	ratio = d1 / d0;
+
+	switch (timing) {
+		case TSL2561_INT_TIMING_13_MS:
+			ms = 13.7;
+			break;
+		case TSL2561_INT_TIMING_101_MS:
+			ms = 101.0;
+			break;
+		case TSL2561_INT_TIMING_402_MS:
+			ms = 402.0;
+			break;
+		default:
+			lux = 0.0;
+			return false;
+	}
+
+//	PrintFloat::printFloat(&pc_debug, "ratio:", ratio);
+//	PrintFloat::printFloat(&pc_debug, "ms:", ms);
+
+	// Normalize for integration time
+	d0 *= (402.0 / ms);
+	d1 *= (402.0 / ms);
+
+	// Normalize for gain
+	if ( gain == TSL2561_CMD_LOW_GAIN ) {
+		d0 *= 16.0;
+		d1 *= 16.0;
+	}
+
+	// Determine lux per datasheet equations:
+	if (ratio < 0.5) {
+		lux = 0.0304 * d0 - 0.062 * d0 * pow(ratio, 1.4);
+		return true;
+	}
+
+	if (ratio < 0.61) {
+		lux = 0.0224 * d0 - 0.031 * d1;
+		return true;
+	}
+
+	if (ratio < 0.80) {
+		lux = 0.0128 * d0 - 0.0153 * d1;
+		return true;
+	}
+
+	if (ratio < 1.30) {
+		lux = 0.00146 * d0 - 0.00112 * d1;
+		return true;
+	}
+
+	// if (ratio > 1.30)
+	lux = 0.0;
+
+	return true;
 }
 
 bool TSL2561::readByte(unsigned char address, char data_read[], int length) {
